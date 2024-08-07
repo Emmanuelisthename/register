@@ -1,0 +1,7 @@
+runtime: go122
+
+service: register
+main: dev/register.git/services/register
+
+env_variables:
+  REGISTER_WEB_API_HOST: "0.0.0.0:8080"

@@ -1,0 +1,57 @@
+package yourpackage
+
+import (
+    "context"
+    "net/http"
+    "net/http/httptest"
+    "testing"
+
+    "github.com/golang/mock/gomock"
+    "github.com/stretchr/testify/assert"
+    "yourmodule/mocks" // Adjust the import path as necessary
+)
+
+func TestCreateEndpoint(t *testing.T) {
+    // Initialize a gomock controller
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    // Create a mock Store
+    mockStore := mocks.NewMockStore(ctrl)
+    
+    // Define the expected behavior for the mock
+    mockStore.EXPECT().Create(gomock.Any()).Return(nil).Times(1)
+
+    // Create a service with the mocked store
+    svc := &Service{
+        Log:   nil, // Assuming no logger needed for this test
+        Store: mockStore,
+    }
+
+    // Create a new HTTP request to the /create endpoint
+    req, err := http.NewRequest("POST", "/create", nil)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    // Create a ResponseRecorder to capture the response
+    rr := httptest.NewRecorder()
+
+    // Define the handler function
+    handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Here you would call the method of your Service that handles the request
+        // For example, assuming you have a method svc.CreateHandler(w, r):
+        err := svc.Store.Create(context.Background())
+        if err != nil {
+            http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            return
+        }
+        w.WriteHeader(http.StatusOK)
+    })
+
+    // Serve HTTP request
+    handler.ServeHTTP(rr, req)
+
+    // Assert the status code
+    assert.Equal(t, http.StatusOK, rr.Code)
+}
